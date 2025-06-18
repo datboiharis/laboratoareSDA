@@ -1,0 +1,392 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+/**
+ * @brief Structure representing a node in a binary tree.
+ */
+typedef struct Node {
+    int key;
+    char name[50];
+    int age;
+    float score;
+    struct Node *left;
+    struct Node *right;
+} Node;
+
+/**
+ * @brief Creates a new node with the given data.
+ * 
+ * @param key Unique integer identifier for the node.
+ * @param name Name of the person.
+ * @param age Age of the person.
+ * @param score Score associated with the person.
+ * @return Pointer to the newly created node.
+ */
+Node* create_node(int key, char *name, int age, float score) {
+    Node* newnode = (Node*)malloc(sizeof(Node));
+    if(newnode == NULL) {
+        printf("Memory allocation error!\n");
+        exit(1);
+    }
+    newnode->key = key;
+    strcpy(newnode->name, name);
+    newnode->age = age;
+    newnode->score = score;
+    newnode->left = newnode->right = NULL;
+    return newnode;
+}
+
+/**
+ * @brief Inserts a new node into the binary search tree.
+ * 
+ * @param root Root of the tree.
+ * @param newnode Node to be inserted.
+ * @return Pointer to the root of the updated tree.
+ */
+Node* insert_node(Node* root, Node* newnode) {
+    if(root == NULL) {
+        return newnode;
+    }
+    if(newnode->key < root->key) {
+        root->left = insert_node(root->left, newnode);
+    } else if(newnode->key > root->key) {
+        root->right = insert_node(root->right, newnode);
+    } else {
+        printf("Duplicate key (%d) - node not inserted.\n", newnode->key);
+    }
+    return root;
+}
+
+/**
+ * @brief Searches for a node with the given key.
+ * 
+ * @param root Root of the tree.
+ * @param key Key to search for.
+ * @return Pointer to the found node, or NULL if not found.
+ */
+Node* search_node(Node* root, int key) {
+    if(root == NULL || root->key == key) {
+        return root;
+    }
+    if(key < root->key)
+        return search_node(root->left, key);
+    return search_node(root->right, key);
+}
+
+/**
+ * @brief Prints the contents of a node.
+ * 
+ * @param node Pointer to the node to be printed.
+ */
+void print_node(Node* node) {
+    if(node != NULL)
+        printf("Key: %d, Name: %s, Age: %d, Score: %.2f\n", node->key, node->name, node->age, node->score);
+}
+
+/**
+ * @brief Performs an inorder traversal of the tree.
+ * 
+ * @param root Root of the tree.
+ */
+void inorder_traversal(Node* root) {
+    if(root != NULL) {
+        inorder_traversal(root->left);
+        print_node(root);
+        inorder_traversal(root->right);
+    }
+}
+
+/**
+ * @brief Performs a preorder traversal of the tree.
+ * 
+ * @param root Root of the tree.
+ */
+void preorder_traversal(Node* root) {
+    if(root != NULL) {
+        print_node(root);
+        preorder_traversal(root->left);
+        preorder_traversal(root->right);
+    }
+}
+
+/**
+ * @brief Performs a postorder traversal of the tree.
+ * 
+ * @param root Root of the tree.
+ */
+void postorder_traversal(Node* root) {
+    if(root != NULL) {
+        postorder_traversal(root->left);
+        postorder_traversal(root->right);
+        print_node(root);
+    }
+}
+
+/**
+ * @brief Performs a depth-first traversal (DFS) of the tree using a stack.
+ * 
+ * @param root Root of the tree.
+ */
+void dfs_traversal(Node* root) {
+    if(root == NULL) return;
+    Node** stack = (Node**)malloc(100 * sizeof(Node*));
+    int top = -1;
+    stack[++top] = root;
+    while(top >= 0) {
+        Node* current = stack[top--];
+        print_node(current);
+        if(current->right)
+            stack[++top] = current->right;
+        if(current->left)
+            stack[++top] = current->left;
+    }
+    free(stack);
+}
+
+/**
+ * @brief Performs a breadth-first traversal (BFS) of the tree using a queue.
+ * 
+ * @param root Root of the tree.
+ */
+void bfs_traversal(Node* root) {
+    if(root == NULL) return;
+    Node** queue = (Node**)malloc(100 * sizeof(Node*));
+    int front = 0, rear = 0;
+    queue[rear++] = root;
+    while(front < rear) {
+        Node* current = queue[front++];
+        print_node(current);
+        if(current->left)
+            queue[rear++] = current->left;
+        if(current->right)
+            queue[rear++] = current->right;
+    }
+    free(queue);
+}
+
+/**
+ * @brief Counts the number of nodes in the tree.
+ * 
+ * @param root Root of the tree.
+ * @return Total number of nodes.
+ */
+int count_nodes(Node* root) {
+    if(root == NULL)
+        return 0;
+    return 1 + count_nodes(root->left) + count_nodes(root->right);
+}
+
+/**
+ * @brief Stores the inorder traversal of the tree in an array.
+ * 
+ * @param root Root of the tree.
+ * @param arr Array to store the node pointers.
+ * @param index Pointer to the current index in the array.
+ */
+void store_inorder(Node* root, Node** arr, int *index) {
+    if(root == NULL) return;
+    store_inorder(root->left, arr, index);
+    arr[(*index)++] = root;
+    store_inorder(root->right, arr, index);
+}
+
+/**
+ * @brief Builds a balanced binary tree from a sorted array of nodes.
+ * 
+ * @param arr Sorted array of node pointers.
+ * @param start Starting index of the array.
+ * @param end Ending index of the array.
+ * @return Pointer to the root of the balanced tree.
+ */
+Node* build_balanced_tree(Node** arr, int start, int end) {
+    if(start > end)
+        return NULL;
+    int mid = (start + end) / 2;
+    Node* root = arr[mid];
+    root->left = build_balanced_tree(arr, start, mid - 1);
+    root->right = build_balanced_tree(arr, mid + 1, end);
+    return root;
+}
+
+/**
+ * @brief Balances the binary search tree.
+ * 
+ * @param root Root of the unbalanced tree.
+ * @return Pointer to the root of the balanced tree.
+ */
+Node* balance_tree(Node* root) {
+    int n = count_nodes(root);
+    Node** arr = (Node**)malloc(n * sizeof(Node*));
+    int index = 0;
+    store_inorder(root, arr, &index);
+    Node* balanced_root = build_balanced_tree(arr, 0, n - 1);
+    free(arr);
+    return balanced_root;
+}
+
+/**
+ * @brief Mirrors (inverts) the binary tree.
+ * 
+ * @param root Root of the tree.
+ */
+void mirror_tree(Node* root) {
+    if(root == NULL) return;
+    Node* temp = root->left;
+    root->left = root->right;
+    root->right = temp;
+    mirror_tree(root->left);
+    mirror_tree(root->right);
+}
+
+/**
+ * @brief Frees all the nodes in the tree.
+ * 
+ * @param root Root of the tree.
+ */
+void free_tree(Node* root) {
+    if(root == NULL) return;
+    free_tree(root->left);
+    free_tree(root->right);
+    free(root);
+}
+
+/**
+ * @brief Clears the input buffer to avoid unwanted leftover input.
+ */
+void clear_input_buffer() {
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+}
+
+/**
+ * @brief Entry point of the program. Provides a menu-driven interface for binary search tree operations.
+ * 
+ * Operations include:
+ * - Adding nodes to the tree
+ * - Inorder, preorder, postorder, DFS, BFS traversals
+ * - Searching for nodes by key
+ * - Balancing the tree
+ * - Mirroring (inverting) the tree
+ * - Clearing and freeing memory of the tree
+ * - Exiting the program
+ * 
+ * @return int Returns 0 upon successful execution.
+ */
+int main() {
+    Node* root = NULL;
+    int option;
+    while(1) {
+        printf("\n----- Menu -----\n");
+        printf("1. Add elements\n");
+        printf("2. Display tree (Inorder)\n");
+        printf("3. Search node\n");
+        printf("4. Preorder traversal\n");
+        printf("5. Postorder traversal\n");
+        printf("6. DFS traversal\n");
+        printf("7. BFS traversal\n");
+        printf("8. Balance tree\n");
+        printf("9. Mirror tree\n");
+        printf("10. Clear tree\n");
+        printf("11. Exit\n");
+        printf("Select option: ");
+        if(scanf("%d", &option) != 1) {
+            printf("Input error!\n");
+            break;
+        }
+
+        if(option == 1) {
+            int numNodes;
+            printf("Enter number of nodes to add: ");
+            scanf("%d", &numNodes);
+            for(int i = 0; i < numNodes; i++) {
+                int key, age;
+                char name[50];
+                float score;
+                printf("\nNode %d:\n", i + 1);
+                printf("Key: ");
+                scanf("%d", &key);
+                printf("Name: ");
+                scanf("%s", name);
+                printf("Age: ");
+                scanf("%d", &age);
+                printf("Score: ");
+                scanf("%f", &score);
+                Node* newnode = create_node(key, name, age, score);
+                root = insert_node(root, newnode);
+            }
+        } else if(option == 2) {
+            if(root == NULL)
+                printf("Tree is empty!\n");
+            else {
+                printf("\nTree (inorder):\n");
+                inorder_traversal(root);
+            }
+        } else if(option == 3) {
+            int searchKey;
+            printf("Enter key to search: ");
+            scanf("%d", &searchKey);
+            Node* found = search_node(root, searchKey);
+            if(found) {
+                printf("Node found:\n");
+                print_node(found);
+            } else {
+                printf("Node with key %d not found.\n", searchKey);
+            }
+        } else if(option == 4) {
+            if(root == NULL)
+                printf("Tree is empty!\n");
+            else {
+                printf("\nTree (preorder):\n");
+                preorder_traversal(root);
+            }
+        } else if(option == 5) {
+            if(root == NULL)
+                printf("Tree is empty!\n");
+            else {
+                printf("\nTree (postorder):\n");
+                postorder_traversal(root);
+            }
+        } else if(option == 6) {
+            if(root == NULL)
+                printf("Tree is empty!\n");
+            else {
+                printf("\nTree (DFS):\n");
+                dfs_traversal(root);
+            }
+        } else if(option == 7) {
+            if(root == NULL)
+                printf("Tree is empty!\n");
+            else {
+                printf("\nTree (BFS):\n");
+                bfs_traversal(root);
+            }
+        } else if(option == 8) {
+            if(root == NULL)
+                printf("Tree is empty!\n");
+            else {
+                root = balance_tree(root);
+                printf("Tree balanced!\n");
+            }
+        } else if(option == 9) {
+            if(root == NULL)
+                printf("Tree is empty!\n");
+            else {
+                mirror_tree(root);
+                printf("Tree mirrored!\n");
+            }
+        } else if(option == 10) {
+            free_tree(root);
+            root = NULL;
+            printf("Tree cleared and memory freed!\n");
+        } else if(option == 11) {
+            free_tree(root);
+            printf("Exiting program.\n");
+            break;
+        } else {
+            printf("Invalid option!\n");
+        }
+        clear_input_buffer();
+    }
+    return 0;
+}
