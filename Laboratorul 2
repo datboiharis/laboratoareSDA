@@ -1,0 +1,314 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+/**
+ * @brief Structure representing a book in the linked list.
+ */
+typedef struct Book {
+    int id;                     /**< Book ID */
+    char title[50];             /**< Book title */
+    char author[50];            /**< Book author */
+    int year;                   /**< Year of publication */
+    float price;                /**< Price of the book */
+    struct Book* next;          /**< Pointer to the next book in the list */
+} Book;
+
+Book* head = NULL;
+
+/**
+ * @brief Reads a book's details from the user.
+ * @return A Book structure with the filled-in values.
+ */
+Book read_book() {
+    Book b;
+    printf("ID: "); scanf("%d", &b.id);
+    printf("Title: "); scanf(" %[^\n]", b.title);
+    printf("Author: "); scanf(" %[^\n]", b.author);
+    printf("Year: "); scanf("%d", &b.year);
+    printf("Price: "); scanf("%f", &b.price);
+    b.next = NULL;
+    return b;
+}
+
+/**
+ * @brief Adds a book to the end of the linked list.
+ * @param b Book to add.
+ */
+void add_end(Book b) {
+    Book* new_node = (Book*)malloc(sizeof(Book));
+    *new_node = b;
+    new_node->next = NULL;
+
+    if (head == NULL) {
+        head = new_node;
+        return;
+    }
+
+    Book* temp = head;
+    while (temp->next != NULL)
+        temp = temp->next;
+    temp->next = new_node;
+}
+
+/**
+ * @brief Displays all books in the linked list.
+ */
+void show_list() {
+    if (!head) {
+        printf("The list is empty.\n");
+        return;
+    }
+
+    Book* temp = head;
+    int index = 0;
+    while (temp) {
+        printf("Pos %d -> ID: %d, Title: %s, Author: %s, Year: %d, Price: %.2f\n",
+               index++, temp->id, temp->title, temp->author, temp->year, temp->price);
+        temp = temp->next;
+    }
+}
+
+/**
+ * @brief Searches for a book by its title.
+ * @param key The title to search for.
+ * @return The position of the book in the list, or -1 if not found.
+ */
+int search_title(char* key) {
+    Book* temp = head;
+    int index = 0;
+    while (temp) {
+        if (strcmp(temp->title, key) == 0)
+            return index;
+        temp = temp->next;
+        index++;
+    }
+    return -1;
+}
+
+/**
+ * @brief Frees all memory allocated to the linked list.
+ */
+void free_list() {
+    Book* temp;
+    while (head) {
+        temp = head;
+        head = head->next;
+        free(temp);
+    }
+}
+
+/**
+ * @brief Inserts a book at the beginning of the list.
+ * @param b Book to insert.
+ */
+void insert_start(Book b) {
+    Book* new_node = (Book*)malloc(sizeof(Book));
+    *new_node = b;
+    new_node->next = head;
+    head = new_node;
+}
+
+/**
+ * @brief Inserts a book at a specified position in the list.
+ * @param b Book to insert.
+ * @param pos Position at which to insert the book (0-based).
+ */
+void insert_at_position(Book b, int pos) {
+    if (pos < 0) {
+        printf("Invalid position.\n");
+        return;
+    }
+
+    if (pos == 0) {
+        insert_start(b);
+        return;
+    }
+
+    Book* temp = head;
+    for (int i = 0; i < pos - 1 && temp != NULL; i++)
+        temp = temp->next;
+
+    if (!temp) {
+        printf("Invalid position.\n");
+        return;
+    }
+
+    Book* new_node = (Book*)malloc(sizeof(Book));
+    *new_node = b;
+    new_node->next = temp->next;
+    temp->next = new_node;
+}
+
+/**
+ * @brief Deletes a book at a given position in the list.
+ * @param pos Position of the book to delete (0-based).
+ */
+void delete_at_position(int pos) {
+    if (!head || pos < 0) {
+        printf("Invalid position.\n");
+        return;
+    }
+
+    if (pos == 0) {
+        Book* temp = head;
+        head = head->next;
+        free(temp);
+        return;
+    }
+
+    Book* temp = head;
+    for (int i = 0; i < pos - 1 && temp->next != NULL; i++)
+        temp = temp->next;
+
+    if (!temp->next) {
+        printf("Invalid position.\n");
+        return;
+    }
+
+    Book* toDelete = temp->next;
+    temp->next = toDelete->next;
+    free(toDelete);
+}
+
+/**
+ * @brief Reverses the order of the linked list.
+ */
+void reverse_list() {
+    Book* prev = NULL;
+    Book* curr = head;
+    Book* next = NULL;
+
+    while (curr) {
+        next = curr->next;
+        curr->next = prev;
+        prev = curr;
+        curr = next;
+    }
+
+    head = prev;
+}
+
+/**
+ * @brief Sorts the list of books in ascending order by publication year.
+ * 
+ * This function uses a modified bubble sort algorithm for linked lists.
+ */
+void sort_year() {
+    if (!head || !head->next)
+        return;
+
+    int swapped;
+    Book *ptr1, *lptr = NULL;
+
+    do {
+        swapped = 0;
+        ptr1 = head;
+
+        while (ptr1->next != lptr) {
+            if (ptr1->year > ptr1->next->year) {
+                // Swap content
+                Book temp = *ptr1;
+                *ptr1 = *ptr1->next;
+                *ptr1->next = temp;
+
+                // Fix pointers
+                Book* t = ptr1->next;
+                ptr1->next = t->next;
+                t->next = ptr1;
+
+                if (ptr1 == head)
+                    head = t;
+                else {
+                    Book* pred = head;
+                    while (pred->next != ptr1)
+                        pred = pred->next;
+                    pred->next = t;
+                }
+
+                swapped = 1;
+            }
+            ptr1 = ptr1->next;
+        }
+
+        lptr = ptr1;
+    } while (swapped);
+}
+
+/**
+ * @brief Displays a menu and performs linked list operations based on user input.
+ */
+void menu() {
+    int opt, pos;
+    Book b;
+    char title[50];
+
+    do {
+        printf("\n1. Add book at end\n2. Display list\n3. Search by title\n");
+        printf("4. Delete by position\n5. Insert at beginning\n6. Insert at position\n");
+        printf("7. Reverse list\n8. Sort by year\n9. Clear list\n0. Exit\nChoose: ");
+        scanf("%d", &opt);
+
+        switch (opt) {
+            case 1:
+                b = read_book();
+                add_end(b);
+                break;
+            case 2:
+                show_list();
+                break;
+            case 3:
+                printf("Enter title to search: ");
+                scanf(" %[^\n]", title);
+                pos = search_title(title);
+                if (pos >= 0)
+                    printf("Book found at position %d\n", pos);
+                else
+                    printf("Book not found.\n");
+                break;
+            case 4:
+                printf("Enter position to delete: ");
+                scanf("%d", &pos);
+                delete_at_position(pos);
+                break;
+            case 5:
+                b = read_book();
+                insert_start(b);
+                break;
+            case 6:
+                b = read_book();
+                printf("Enter position to insert: ");
+                scanf("%d", &pos);
+                insert_at_position(b, pos);
+                break;
+            case 7:
+                reverse_list();
+                printf("List has been reversed.\n");
+                break;
+            case 8:
+                sort_year();
+                printf("List sorted by year.\n");
+                break;
+            case 9:
+                free_list();
+                head = NULL;
+                printf("List cleared.\n");
+                break;
+            case 0:
+                printf("Exiting...\n");
+                break;
+            default:
+                printf("Invalid option.\n");
+        }
+    } while (opt != 0);
+}
+
+/**
+ * @brief Entry point of the program.
+ * @return int Exit status.
+ */
+int main() {
+    menu();
+    free_list();
+    return 0;
+}
