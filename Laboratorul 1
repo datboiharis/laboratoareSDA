@@ -1,0 +1,346 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_ELEMENTS 100
+#define FIELD_LENGTH 50
+
+/**
+ * @brief Structure representing an element with a single field.
+ */
+typedef struct {
+    char field[FIELD_LENGTH];
+} Element;
+
+/**
+ * @brief Reads elements from user input into a static array.
+ * @param array Pointer to the array of elements.
+ * @param n Pointer to the number of elements.
+ */
+void read_elements(Element *array, int *n) {
+    printf("Enter the number of elements: ");
+    scanf("%d", n);
+    for (int i = 0; i < *n; i++) {
+        printf("Enter value for field [%d]: ", i + 1);
+        scanf("%s", array[i].field);
+    }
+    printf("\n");
+}
+
+/**
+ * @brief Displays all elements of the array.
+ * @param array Pointer to the array of elements.
+ * @param n Number of elements in the array.
+ */
+void display_elements(const Element *array, int n) {
+    printf("The elements of the array are:\n");
+    for (int i = 0; i < n; i++) {
+        printf("Element [%d]: field = %s\n", i + 1, array[i].field);
+    }
+    printf("\n");
+}
+
+/**
+ * @brief Searches for a value in the array.
+ * @param array Pointer to the array of elements.
+ * @param n Number of elements in the array.
+ * @param value String value to search for.
+ * @return Index of the found element, or -1 if not found.
+ */
+int search_element(const Element *array, int n, const char *value) {
+    for (int i = 0; i < n; i++) {
+        if (strcmp(array[i].field, value) == 0) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+/**
+ * @brief Reads elements from user input and allocates memory dynamically.
+ * @param n Pointer to number of elements to read.
+ * @return Pointer to dynamically allocated array of elements.
+ */
+Element* read_dynamic(int *n) {
+    printf("Enter the number of elements: ");
+    scanf("%d", n);
+    Element *array = (Element*)malloc((*n) * sizeof(Element));
+    for (int i = 0; i < *n; i++) {
+        printf("Enter value for field [%d]: ", i + 1);
+        scanf("%s", array[i].field);
+    }
+    return array;
+}
+
+/**
+ * @brief Frees memory allocated for dynamic array.
+ * @param array Pointer to array to free.
+ */
+void free_memory(Element *array) {
+    free(array);
+}
+
+/**
+ * @brief Sorts elements alphabetically by field.
+ * @param array Pointer to the array of elements.
+ * @param n Number of elements in the array.
+ */
+void sort_elements(Element *array, int n) {
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = i + 1; j < n; j++) {
+            if (strcmp(array[i].field, array[j].field) > 0) {
+                Element temp = array[i];
+                array[i] = array[j];
+                array[j] = temp;
+            }
+        }
+    }
+}
+
+/**
+ * @brief Inserts an element at the end of a dynamic array.
+ * @param array Pointer to the dynamic array.
+ * @param n Pointer to the number of elements.
+ * @param value Value to insert.
+ * @return Pointer to updated array.
+ */
+Element* insert_end(Element *array, int *n, const char *value) {
+    array = realloc(array, (*n + 1) * sizeof(Element));
+    strcpy(array[*n].field, value);
+    (*n)++;
+    return array;
+}
+
+/**
+ * @brief Inserts an element at the beginning of a dynamic array.
+ * @param array Pointer to the dynamic array.
+ * @param n Pointer to the number of elements.
+ * @param value Value to insert.
+ * @return Pointer to updated array.
+ */
+Element* insert_start(Element *array, int *n, const char *value) {
+    array = realloc(array, (*n + 1) * sizeof(Element));
+    for (int i = *n; i > 0; i--) {
+        array[i] = array[i - 1];
+    }
+    strcpy(array[0].field, value);
+    (*n)++;
+    return array;
+}
+
+/**
+ * @brief Inserts an element at a specific position in a dynamic array.
+ * @param array Pointer to the dynamic array.
+ * @param n Pointer to the number of elements.
+ * @param value Value to insert.
+ * @param pos Position to insert at (0-based index).
+ * @return Pointer to updated array.
+ */
+Element* insert_at_position(Element *array, int *n, const char *value, int pos) {
+    if (pos < 0 || pos > *n) {
+        printf("Invalid position!\n");
+        return array;
+    }
+    array = realloc(array, (*n + 1) * sizeof(Element));
+    for (int i = *n; i > pos; i--) {
+        array[i] = array[i - 1];
+    }
+    strcpy(array[pos].field, value);
+    (*n)++;
+    return array;
+}
+
+/**
+ * @brief Deletes an element at a specific position from a dynamic array.
+ * @param array Pointer to the dynamic array.
+ * @param n Pointer to the number of elements.
+ * @param pos Position to delete from (0-based index).
+ * @return Pointer to updated array.
+ */
+Element* delete_element(Element *array, int *n, int pos) {
+    if (pos < 0 || pos >= *n) {
+        printf("Invalid position!\n");
+        return array;
+    }
+    for (int i = pos; i < *n - 1; i++) {
+        array[i] = array[i + 1];
+    }
+    array = realloc(array, (*n - 1) * sizeof(Element));
+    (*n)--;
+    return array;
+}
+
+/**
+ * @brief Provides a menu for performing operations on a statically allocated array.
+ */
+void static_array_operations() {
+    Element array[MAX_ELEMENTS];
+    int n;
+    read_elements(array, &n);
+   
+    int operation_choice;
+    do {
+        printf("\nStatic Array Operations:\n");
+        printf("1. Display elements\n");
+        printf("2. Search element\n");
+        printf("3. Sort elements\n");
+        printf("4. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &operation_choice);
+
+        switch (operation_choice) {
+            case 1:
+                display_elements(array, n);
+                break;
+            case 2: {
+                char search_value[FIELD_LENGTH];
+                printf("Enter value to search: ");
+                scanf("%s", search_value);
+                int position = search_element(array, n, search_value);
+                if (position != -1) {
+                    printf("Element found at position %d\n", position + 1);
+                } else {
+                    printf("Element not found\n");
+                }
+                break;
+            }
+            case 3:
+                sort_elements(array, n);
+                printf("Sorted elements:\n");
+                display_elements(array, n);
+                break;
+            case 4:
+                printf("Exiting Static Array Operations.\n");
+                break;
+            default:
+                printf("Invalid choice. Please try again.\n");
+        }
+    } while (operation_choice != 4);
+}
+
+/**
+ * @brief Provides a menu for performing operations on a dynamically allocated array.
+ */
+void dynamic_array_operations() {
+    int dynamic_n;
+    Element *dynamic_array = read_dynamic(&dynamic_n);
+
+    int operation_choice;
+    do {
+        printf("\nDynamic Array Operations:\n");
+        printf("1. Display elements\n");
+        printf("2. Search element\n");
+        printf("3. Sort elements\n");
+        printf("4. Insert element at the end\n");
+        printf("5. Insert element at the start\n");
+        printf("6. Insert element at specific position\n");
+        printf("7. Delete element at specific position\n");
+        printf("8. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &operation_choice);
+
+        switch (operation_choice) {
+            case 1:
+                display_elements(dynamic_array, dynamic_n);
+                break;
+            case 2: {
+                char search_value[FIELD_LENGTH];
+                printf("Enter value to search in dynamic array: ");
+                scanf("%s", search_value);
+                int position = search_element(dynamic_array, dynamic_n, search_value);
+                if (position != -1) {
+                    printf("Element found at position %d\n", position + 1);
+                } else {
+                    printf("Element not found\n");
+                }
+                break;
+            }
+            case 3:
+                sort_elements(dynamic_array, dynamic_n);
+                printf("Sorted elements:\n");
+                display_elements(dynamic_array, dynamic_n);
+                break;
+            case 4: {
+                char new_value[FIELD_LENGTH];
+                printf("Enter value to insert at the end: ");
+                scanf("%s", new_value);
+                dynamic_array = insert_end(dynamic_array, &dynamic_n, new_value);
+                display_elements(dynamic_array, dynamic_n);
+                break;
+            }
+            case 5: {
+                char new_value[FIELD_LENGTH];
+                printf("Enter value to insert at the start: ");
+                scanf("%s", new_value);
+                dynamic_array = insert_start(dynamic_array, &dynamic_n, new_value);
+                display_elements(dynamic_array, dynamic_n);
+                break;
+            }
+            case 6: {
+                int pos;
+                printf("Enter position to insert at (0-based index): ");
+                scanf("%d", &pos);
+                char new_value[FIELD_LENGTH];
+                printf("Enter value to insert at position %d: ", pos);
+                scanf("%s", new_value);
+                dynamic_array = insert_at_position(dynamic_array, &dynamic_n, new_value, pos);
+                display_elements(dynamic_array, dynamic_n);
+                break;
+            }
+            case 7: {
+                int pos;
+                printf("Enter position to delete element from (0-based index): ");
+                scanf("%d", &pos);
+                dynamic_array = delete_element(dynamic_array, &dynamic_n, pos);
+                display_elements(dynamic_array, dynamic_n);
+                break;
+            }
+            case 8:
+                printf("Exiting Dynamic Array Operations.\n");
+                break;
+            default:
+                printf("Invalid choice. Please try again.\n");
+        }
+    } while (operation_choice != 8);
+
+    free_memory(dynamic_array);
+}
+
+/**
+ * @brief Displays the main menu and allows the user to choose between static and dynamic array operations.
+ */
+void menu() {
+    int choice;
+    do {
+        printf("\nMenu:\n");
+        printf("1. Static Array Operations\n");
+        printf("2. Dynamic Array Operations\n");
+        printf("3. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+        printf("\n");
+
+        switch (choice) {
+        case 1:
+            static_array_operations();
+            break;
+        case 2:
+            dynamic_array_operations();
+            break;
+        case 3:
+            printf("Exiting program.\n");
+            break;
+        default:
+            printf("Invalid choice. Please try again.\n\n");
+        }
+    } while (choice != 3);
+}
+
+/**
+ * @brief Entry point of the program.
+ * @return Exit status code.
+ */
+int main() {
+    menu();
+    return 0;
+}
