@@ -1,0 +1,285 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <string.h>
+
+int *array = NULL;
+int size = 0;
+
+/**
+ * @brief Initializes the global array with random integers in [0, 9999].
+ * 
+ * @param n Number of elements to initialize.
+ */
+void array_init(int n) {
+    array = (int *)malloc(n * sizeof(int));
+    size = n;
+    srand(time(NULL));
+    for (int i = 0; i < size; i++)
+        array[i] = rand() % 10000;
+    printf("Array initialized with %d elements.\n", size);
+}
+
+/**
+ * @brief Displays the elements of the array.
+ */
+void array_display() {
+    if (!array) {
+        printf("Array not initialized.\n");
+        return;
+    }
+    for (int i = 0; i < size; i++)
+        printf("%d ", array[i]);
+    printf("\n");
+}
+
+/**
+ * @brief Frees the memory allocated for the array.
+ */
+void array_free() {
+    free(array);
+    array = NULL;
+    size = 0;
+    printf("Memory released.\n");
+}
+
+/**
+ * @brief Sorts the array using the Selection Sort algorithm.
+ */
+void selection_sort() {
+    clock_t start = clock();
+    for (int i = 0; i < size - 1; i++) {
+        int min = i;
+        for (int j = i + 1; j < size; j++)
+            if (array[j] < array[min])
+                min = j;
+        int temp = array[i];
+        array[i] = array[min];
+        array[min] = temp;
+    }
+    clock_t end = clock();
+    printf("Selection sort took %.4f seconds.\n", (double)(end - start) / CLOCKS_PER_SEC);
+}
+
+/**
+ * @brief Transforms a subtree into a max heap.
+ * 
+ * @param n Size of heap.
+ * @param i Index of root node in the subtree.
+ */
+void heapify(int n, int i) {
+    int largest = i;
+    int l = 2 * i + 1;
+    int r = 2 * i + 2;
+
+    if (l < n && array[l] > array[largest])
+        largest = l;
+    if (r < n && array[r] > array[largest])
+        largest = r;
+
+    if (largest != i) {
+        int tmp = array[i];
+        array[i] = array[largest];
+        array[largest] = tmp;
+        heapify(n, largest);
+    }
+}
+
+/**
+ * @brief Sorts the array using the Heap Sort algorithm.
+ */
+void heap_sort() {
+    clock_t start = clock();
+    for (int i = size / 2 - 1; i >= 0; i--)
+        heapify(size, i);
+    for (int i = size - 1; i >= 0; i--) {
+        int tmp = array[0];
+        array[0] = array[i];
+        array[i] = tmp;
+        heapify(i, 0);
+    }
+    clock_t end = clock();
+    printf("Heap sort took %.4f seconds.\n", (double)(end - start) / CLOCKS_PER_SEC);
+}
+
+/**
+ * @brief Searches for a value using the Linear Search algorithm.
+ * 
+ * @param target The value to search for.
+ */
+void linear_search(int target) {
+    clock_t start = clock();
+    for (int i = 0; i < size; i++) {
+        if (array[i] == target) {
+            clock_t end = clock();
+            printf("Found at index %d. Linear search took %.4f seconds.\n", i, (double)(end - start) / CLOCKS_PER_SEC);
+            return;
+        }
+    }
+    clock_t end = clock();
+    printf("Not found. Linear search took %.4f seconds.\n", (double)(end - start) / CLOCKS_PER_SEC);
+}
+
+/**
+ * @brief Helper function for Binary Search.
+ * 
+ * @param arr The sorted array.
+ * @param target The value to search for.
+ * @return Index of the target if found, -1 otherwise.
+ */
+int binary_search_helper(int *arr, int target) {
+    int l = 0, r = size - 1;
+    while (l <= r) {
+        int m = l + (r - l) / 2;
+        if (arr[m] == target) return m;
+        if (arr[m] < target) l = m + 1;
+        else r = m - 1;
+    }
+    return -1;
+}
+
+/**
+ * @brief Searches for a value using the Binary Search algorithm.
+ * 
+ * @param target The value to search for.
+ */
+void binary_search(int target) {
+    heap_sort();
+    clock_t start = clock();
+    int result = binary_search_helper(array, target);
+    clock_t end = clock();
+    if (result != -1)
+        printf("Found at index %d. Binary search took %.4f seconds.\n", result, (double)(end - start) / CLOCKS_PER_SEC);
+    else
+        printf("Not found. Binary search took %.4f seconds.\n", (double)(end - start) / CLOCKS_PER_SEC);
+}
+
+/**
+ * @struct Matrix2x2
+ * @brief Represents a 2x2 matrix for Fibonacci computation.
+ */
+typedef struct {
+    uint64_t a, b, c, d;
+} Matrix2x2;
+
+/**
+ * @brief Multiplies two 2x2 matrices.
+ * 
+ * @param m1 First matrix.
+ * @param m2 Second matrix.
+ * @return Result of the matrix multiplication.
+ */
+Matrix2x2 matrix_mult(Matrix2x2 m1, Matrix2x2 m2) {
+    Matrix2x2 r;
+    r.a = m1.a * m2.a + m1.b * m2.c;
+    r.b = m1.a * m2.b + m1.b * m2.d;
+    r.c = m1.c * m2.a + m1.d * m2.c;
+    r.d = m1.c * m2.b + m1.d * m2.d;
+    return r;
+}
+
+/**
+ * @brief Computes matrix exponentiation.
+ * 
+ * @param m Base matrix.
+ * @param n Power to raise the matrix to.
+ * @return Matrix raised to the nth power.
+ */
+Matrix2x2 matrix_pow(Matrix2x2 m, int n) {
+    if (n == 1) return m;
+    if (n % 2 == 0) {
+        Matrix2x2 half = matrix_pow(m, n / 2);
+        return matrix_mult(half, half);
+    } else {
+        return matrix_mult(m, matrix_pow(m, n - 1));
+    }
+}
+
+/**
+ * @brief Computes the nth Fibonacci number using matrix exponentiation.
+ * 
+ * @param n The Fibonacci index.
+ * @return The nth Fibonacci number.
+ */
+uint64_t fib(int n) {
+    if (n == 0) return 0;
+    Matrix2x2 base = {1, 1, 1, 0};
+    Matrix2x2 result = matrix_pow(base, n - 1);
+    return result.a;
+}
+
+/**
+ * @brief Calculates and prints the nth Fibonacci number and execution time.
+ * 
+ * @param n The Fibonacci index.
+ */
+void fib_calc(int n) {
+    clock_t start = clock();
+    uint64_t result = fib(n);
+    clock_t end = clock();
+    printf("fib(%d) = %llu. Time: %.4f seconds.\n", n, result, (double)(end - start) / CLOCKS_PER_SEC);
+}
+
+/**
+ * @brief Displays a user menu and handles input.
+ */
+void menu() {
+    int choice, n, target;
+    do {
+        printf("\nMenu:\n");
+        printf("1. Init array\n");
+        printf("2. Display array\n");
+        printf("3. Free array\n");
+        printf("4. Selection Sort\n");
+        printf("5. Heap Sort\n");
+        printf("6. Linear Search\n");
+        printf("7. Binary Search\n");
+        printf("8. Fibonacci\n");
+        printf("0. Exit\n");
+        printf("Choice: ");
+        scanf("%d", &choice);
+        switch (choice) {
+            case 1:
+                printf("Size: "); scanf("%d", &n);
+                array_init(n);
+                break;
+            case 2:
+                array_display();
+                break;
+            case 3:
+                array_free();
+                break;
+            case 4:
+                selection_sort();
+                break;
+            case 5:
+                heap_sort();
+                break;
+            case 6:
+                printf("Value to find: "); scanf("%d", &target);
+                linear_search(target);
+                break;
+            case 7:
+                printf("Value to find: "); scanf("%d", &target);
+                binary_search(target);
+                break;
+            case 8:
+                printf("N = "); scanf("%d", &n);
+                fib_calc(n);
+                break;
+        }
+    } while (choice != 0);
+}
+
+/**
+ * @brief Entry point of the program.
+ * 
+ * @return Exit status.
+ */
+int main() {
+    menu();
+    if (array) array_free();
+    return 0;
+}
